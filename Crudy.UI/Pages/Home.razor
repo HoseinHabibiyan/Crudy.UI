@@ -1,0 +1,82 @@
+﻿@page "/"
+@using System.Text.Json
+@using System.Dynamic
+@using System.Text.RegularExpressions
+@inject HttpClient client
+
+
+<PageTitle>Home</PageTitle>
+
+<style>
+    .json-output {
+        background-color: #f4f4f4;
+        border: 1px solid #ccc;
+        padding: 10px;
+        font-family: Arial, sans-serif;
+        width: 90%
+    }
+</style>
+
+
+
+
+<div class="wrapper d-flex justify-content-between align-items-start">
+    <div class="col-6 d-flex justify-content-center align-items-center">
+        <div class="col-2">
+            <select class="form-control  text-center" @bind="httpMethod">
+                <option value="0">GET</option>
+                <option value="1">POST</option>
+                <option value="2">PUT</option>
+                <option value="3">DELETE</option>
+            </select>
+        </div>
+        <input type="text" @bind-value="urlAddress" class="form-control" />
+        <input class="btn btn-primary" @onclick="Get" value="Send" />
+    </div>
+
+    <div class="col-6 d-flex justify-content-center">
+        @if (jsonData is not null)
+        {
+            <pre class="json-output">@jsonData</pre>
+        }
+    </div>
+</div>
+
+
+
+
+@code {
+    string urlAddress = default!;
+    int httpMethod = default!;
+    string jsonData = default!;
+
+    public async Task Get()
+    {
+        if (urlAddress is null)
+        {
+            return;
+        }
+
+        var request = new HttpRequestMessage(GetMethod(httpMethod), urlAddress);
+        var response = await client.SendAsync(request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            jsonData = ((int)response.StatusCode).ToString() + " " + Regex.Replace(response.StatusCode.ToString(), "(?<=[a-z])([A-Z])", " $1", RegexOptions.Compiled);
+            return;
+        }
+
+        var content = await response.Content.ReadFromJsonAsync<ExpandoObject>();
+
+        jsonData = JsonSerializer.Serialize(content, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+    }
+
+    private HttpMethod GetMethod(int index) => index switch
+    {
+        0 => HttpMethod.Get,
+        1 => HttpMethod.Post,
+        2 => HttpMethod.Put,
+        3 => HttpMethod.Delete,
+        _ => throw new NotImplementedException("Http method value is incorrect")
+    };
+}
