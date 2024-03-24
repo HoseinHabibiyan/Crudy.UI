@@ -1,0 +1,43 @@
+﻿@inherits LayoutComponentBase
+
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+<link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+
+<style>
+
+    .mud-input-label{
+        background-color: #181818;
+        color:white !important;
+    }
+
+    .mud-input-slot{
+        color: white !important;
+    }
+
+    .footer {
+        background-color: #333;
+        color: white;
+        text-align: center;
+        padding: 20px;
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+    }
+</style>
+
+<div class="page" style="background-color:#181818">
+    <main>
+        <NavMenu />
+
+        <article class="content px-0">
+            @Body
+        </article>
+    </main>
+</div>
+<footer>
+    <div class="footer ">
+          @@ 2024 Crudy.ir
+ </div>
+</footer>
+<MudThemeProvider />

@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/admin"
 @using System.Text.Json
 @using System.Dynamic
 @using System.Text.RegularExpressions
@@ -8,12 +8,16 @@
 <PageTitle>Home</PageTitle>
 
 <style>
-    .json-output {
-        background-color: #f4f4f4;
+    .response {
         border: 1px solid #ccc;
         padding: 10px;
-        font-family: Arial, sans-serif;
-        width: 90%
+        width: 90%;
+        height:600px;
+        color:white
+    }
+
+    #request-body{
+        height:560px;
     }
 </style>
 
@@ -21,23 +25,31 @@
 
 
 <div class="wrapper d-flex justify-content-between align-items-start">
-    <div class="col-6 d-flex justify-content-center align-items-center">
-        <div class="col-2">
-            <select class="form-control  text-center" @bind="httpMethod">
-                <option value="0">GET</option>
-                <option value="1">POST</option>
-                <option value="2">PUT</option>
-                <option value="3">DELETE</option>
-            </select>
+    <div class="col-6">
+        <div class="d-flex justify-content-around align-items-center">
+            <div class="col-2">
+                <select class="form-control  text-center" @bind="httpMethod">
+                    <option value="0">GET</option>
+                    <option value="1">POST</option>
+                    <option value="2">PUT</option>
+                    <option value="3">DELETE</option>
+                </select>
+            </div>
+            <input type="text" @bind-value="urlAddress" class="form-control" />
+            <input class="btn btn-primary" @onclick="Get" value="Send" />
         </div>
-        <input type="text" @bind-value="urlAddress" class="form-control" />
-        <input class="btn btn-primary" @onclick="Get" value="Send" />
+        @if (httpMethod is 1 or 2)
+        {
+            <div class="mt-1">
+                <textarea id="request-body" @bind="body" class="form-control"></textarea>
+            </div>
+        }
     </div>
 
     <div class="col-6 d-flex justify-content-center">
         @if (jsonData is not null)
         {
-            <pre class="json-output">@jsonData</pre>
+            <pre class="response">@jsonData</pre>
         }
     </div>
 </div>
@@ -49,6 +61,7 @@
     string urlAddress = default!;
     int httpMethod = default!;
     string jsonData = default!;
+    string body = default!;
 
     public async Task Get()
     {
@@ -57,7 +70,13 @@
             return;
         }
 
-        var request = new HttpRequestMessage(GetMethod(httpMethod), urlAddress);
+        var method = GetMethod(httpMethod);
+        var request = new HttpRequestMessage(method, urlAddress);
+
+        if (method == HttpMethod.Post || method == HttpMethod.Put)
+            request.Content = new StringContent(body);
+
+
         var response = await client.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)

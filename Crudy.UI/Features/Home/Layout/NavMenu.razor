@@ -1,0 +1,94 @@
+﻿
+
+<MudAppBar Color="Color.Dark" Fixed="true">
+    <MudIconButton Color="Color.Dark" Edge="Edge.Start" />
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.Code" Color="Color.Inherit" />
+    <div class="container-fluid">
+        <div class="text" data-msg="C&nbsp;R&nbsp;U&nbsp;D&nbsp;Y">
+            <div class="text--content">
+                <div class="text--data">C&nbsp;R&nbsp;U&nbsp;D&nbsp;Y</div>
+            </div>
+        </div>
+    </div>
+
+    <MudIconButton Icon="@Icons.Filled.Login" Color="Color.Inherit" />
+</MudAppBar>
+
+
+<style>
+
+    * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    .container-fluid {
+        min-height: 100px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .text {
+        position: relative;
+        font-size: 20px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        line-height: 100%;
+        color: #fff;
+    }
+
+        .text::before {
+            content: attr(data-msg);
+            filter: blur(3px);
+        }
+
+        .text::after {
+            content: "";
+            position: absolute;
+            top: -4px;
+            left: 0;
+            width: 50px;
+            height: calc(100% + 4px);
+            border-top: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            animation: moveLeft 3s linear infinite alternate;
+        }
+
+    .text--content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 50px;
+        overflow: hidden;
+        animation: moveLeft 3s linear infinite alternate;
+    }
+
+    .text--data {
+        animation: moveRight 3s linear infinite alternate;
+    }
+
+    @@keyframes moveLeft {
+        0% {
+            transform: translateX(0px);
+        }
+
+        100% {
+            transform: translateX(60px);
+        }
+    }
+
+    @@keyframes moveRight {
+        0% {
+            transform: translateX(0px);
+        }
+
+        100% {
+            transform: translateX(-60px);
+        }
+    }
+</style>

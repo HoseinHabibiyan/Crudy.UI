@@ -1,5 +1,11 @@
+
+@font-face {
+    font-family: ubuntu;
+    src: url(../fonts/Ubuntu-Light.ttf);
+}
+
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'ubuntu', Helvetica, Arial, sans-serif;
 }
 
 h1:focus {
