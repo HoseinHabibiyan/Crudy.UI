@@ -4,6 +4,10 @@
     src: url(../fonts/Ubuntu-Light.ttf);
 }
 
+*{
+    font-family: 'ubuntu', Helvetica, Arial, sans-serif;
+}
+
 html, body {
     font-family: 'ubuntu', Helvetica, Arial, sans-serif;
 }

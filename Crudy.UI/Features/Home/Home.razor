@@ -10,64 +10,99 @@
 <style>
     #response {
         border: 1px solid #ccc;
-        padding: 10px;
         width: 100%;
-        height: 600px;
-        color: black
+        height: 200px;
+        color: black;
+        padding:5px;
     }
 
     #request-body {
-        height: 400px;
+        height: 200px;
     }
 
-    #lead{
-        margin-top:100px;
-        font-size:25px;
-        /* color: #5a5858; */
+    #lead {
+        margin-top: 50x;
+        margin-bottom: 50px;
+        font-size: 25px;
+        color: #5a5858;
+    }
+
+    #url-address-label {
+        font-size: 20px;
         color: white;
+    }
+
+    .help{
+        cursor: pointer;
+        margin-top:50px;
+        margin-bottom: 100px;
+        img{
+            width:650px
+        }
+    }
+
+    #show-help-img-dialog .bit-dlg-hdr {
+        display:none;
     }
 
 </style>
 
+<div class="container d-flex flex-column justify-content-center align-items-center">
 
-<div id="lead" class="d-flex flex-column justify-content-center align-items-center">
-    <span> Makes frontend testing easier by seamlessly mocking backend API.</span>
+    <div id="lead">
+        Makes frontend testing easier by seamlessly mocking backend API.
+    </div>
 
-    <img src="crudy-api.png" width="900" class="mt-10" />
-</div>
+    <div class="card col-6 api-test ">
+        <div class="card-body w-100">
 
+            <div class="d-flex justify-content-around align-items-center">
+                <div class="col-2">
+                    <select class="form-control  text-center" @bind="httpMethod">
+                        <option value="0">GET</option>
+                        <option value="1">POST</option>
+                        <option value="2">PUT</option>
+                        <option value="3">DELETE</option>
+                    </select>
 
+                </div>
+                <div class="col-8 mr-1 ml-1">
+                    <div class="input-group">
+                        <div class="input-group-prepend ">
+                            <span class="input-group-text">https://crudy.ir/</span>
+                        </div>
+                        <input type="text" @bind-value="urlAddress" class="form-control" placeholder="[route]/">
+                    </div>
 
+                </div>
 
-<div class="api-test d-flex justify-content-around align-items-start mt-10">
-    <div class="col-6">
-        <div class="d-flex justify-content-around">
-            <div class="col-2">
-                <MudSelect T="int" Label="Http Method" Variant="Variant.Outlined" AdornmentColor="Color.Primary" AnchorOrigin="Origin.BottomCenter" @bind-Value="httpMethod">
-                    <MudSelectItem Value="0">GET</MudSelectItem>
-                    <MudSelectItem Value="1">POST</MudSelectItem>
-                    <MudSelectItem Value="2">PUT</MudSelectItem>
-                    <MudSelectItem Value="3">DELETE</MudSelectItem>
-                </MudSelect>
+                <button @onclick="Get" class="btn btn-primary">Send</button>
             </div>
-            <div class="col-8">
-                <MudTextField @bind-Value="urlAddress" AdornmentColor="Color.Dark" Label="Url" Variant="Variant.Outlined"></MudTextField>
+            <div class="mt-1">
+                <BitPivot>
+                    <BitPivotItem HeaderText="Request Body">
+                        <div style="margin-top:10px">
+                            <textarea placeholder="Body" id="request-body" @bind="body" class="form-control"></textarea>
+                        </div>
+                    </BitPivotItem>
+                    <BitPivotItem HeaderText="Result">
+                        <pre id="response">@jsonData</pre>
+                    </BitPivotItem>
+                </BitPivot>
             </div>
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Send" Class="mt-1 pl-10 pr-10" @onclick="Get" Color="Color.Primary">Send</MudButton>
         </div>
-        @if (httpMethod is 1 or 2)
-        {
-            <div class="mt-5">
-                <textarea placeholder="Body" id="request-body" @bind="body" class="form-control"></textarea>
-            </div>
-        }
     </div>
 
-    <div class="col-5 d-flex justify-content-center">
-        <pre id="response">@jsonData</pre>
+
+    <div class="mt-10 help">
+        <img src="crudy.png" @onclick="@(()=> showHelp = true)" />
     </div>
 </div>
 
+
+<BitDialog @bind-IsOpen="showHelp" ShowCancelButton="false" ShowOkButton="false" Id="show-help-img-dialog" >
+    <img src="crudy.png" width="800"/>
+</BitDialog>
 
 
 
@@ -76,6 +111,7 @@
     int httpMethod = default!;
     string jsonData = default!;
     string body = default!;
+    bool showHelp = false;
 
     public async Task Get()
     {

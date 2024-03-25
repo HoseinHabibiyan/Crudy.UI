@@ -1,12 +1,10 @@
 ﻿@inherits LayoutComponentBase
 
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
-<link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-<script src="_content/MudBlazor/MudBlazor.min.js"></script>
 
 <style>
 
-    .mud-input-label{
+  /*   .mud-input-label{
         background-color: #181818;
         color:white !important;
     }
@@ -15,18 +13,23 @@
         color: white !important;
     }
 
+    .mud-list{
+        background-color: #181818;
+        color: white !important;
+    } */
+
     .footer {
-        background-color: #333;
+        background-color: #2374ab;
         color: white;
         text-align: center;
         padding: 20px;
         width: 100%;
-        position: fixed;
+        position: relative;
         bottom: 0;
     }
 </style>
 
-<div class="page" style="background-color:#181818">
+<div class="page">
     <main>
         <NavMenu />
 
@@ -36,8 +39,10 @@
     </main>
 </div>
 <footer>
-    <div class="footer ">
+    <div class="footer">
           @@ 2024 Crudy.ir
  </div>
 </footer>
 <MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
