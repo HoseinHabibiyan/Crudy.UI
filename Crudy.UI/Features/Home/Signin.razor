@@ -1,0 +1,31 @@
+﻿@using Crudy.UI.Features.Home.Models;
+@page "/signin"
+@inject HttpClient client
+
+<style>
+   .card h1{
+          font-size: 30px;
+          color: #2374ab;
+          font-weight: bold;
+   }
+</style>
+
+<div class="container  justify-content-center align-items-center">
+    <div class="card col-4 api-test mt-3">
+        <h1 class="text-center mt-3">Sign in</h1>
+        <div class="card-body w-100 d-flex flex-column">
+            <div class="mb-3">
+                <label class="form-label">Email address</label>
+                <input type="email" class="form-control" placeholder="Email address">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" placeholder="assword">
+            </div>
+          <BitButton Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitButtonSize.Large" ButtonStyle="BitButtonStyle.Standard">Sign in</BitButton>
+        </div>
+    </div>
+</div>
+
+@code {
+} 

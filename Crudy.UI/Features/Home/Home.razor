@@ -3,60 +3,6 @@
 @using System.Dynamic
 @using System.Text.RegularExpressions
 @inject HttpClient client
-@inject IJSRuntime JS
-
-<PageTitle>CRUDY</PageTitle>
-
-<style>
-    #response {
-        border: 1px solid #ccc;
-        width: 100%;
-        height: 200px;
-        color: black;
-        padding: 5px;
-    }
-
-    #request-body {
-        height: 200px;
-    }
-
-    #lead {
-        margin-top: 50x;
-        margin-bottom: 50px;
-        font-size: 25px;
-        color: #5a5858;
-    }
-
-    #url-address-label {
-        font-size: 20px;
-        color: white;
-    }
-
-    .curl-request-cheat-sheet {
-        margin-top: 50px;
-        img {
-        box-shadow: 0 8px 6px -6px black;
-        cursor: pointer;
-        width: 650px
-       }
-
-       span{
-           font-family:'ubuntu';
-           font-size:40px;
-       }
-
-    }
-
-    #show-help-img-dialog .bit-dlg-hdr {
-        display: none;
-    }
-
-    .container-rest-client {
-        background-color: #2374ab;
-        padding: 50px 0;
-    }
-
-</style>
 
 <div class="wrapper col-12 d-flex flex-column justify-content-center align-items-center">
 
@@ -129,53 +75,53 @@
 
     <div class="col-6 mt-3">
         <table class="table">
-          <thead>
+            <thead>
             <tr>
-              <th scope="col">Action</th>
-              <th scope="col">HTTP Method</th>
-              <th scope="col">Payload</th>
-              <th scope="col">URL</th>
-              <th scope="col">Description</th>
+                <th scope="col">Action</th>
+                <th scope="col">HTTP Method</th>
+                <th scope="col">Payload</th>
+                <th scope="col">URL</th>
+                <th scope="col">Description</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             <tr>
-              <td>Create</td>
-              <td>POST</td>
-              <td>JSON</td>
-              <td>/[route]</td>
-              <td>Create entity</td>
-            </tr>
-              <tr>
-              <td>Read</td>
-              <td>GET</td>
-              <td>-</td>
-              <td>/[route]</td>
-              <td>Read entity</td>
-            </tr>
-              <tr>
-              <td>Read</td>
-              <td>GET</td>
-              <td>-</td>
-              <td>/[route]/[id]</td>
-              <td>Read entity by id</td>
+                <td>Create</td>
+                <td>POST</td>
+                <td>JSON</td>
+                <td>/[route]</td>
+                <td>Create entity</td>
             </tr>
             <tr>
-              <td>Update</td>
-              <td>PUT</td>
-              <td>JSON</td>
-              <td>/[route]/[id]</td>
-              <td>Update entity</td>
+                <td>Read</td>
+                <td>GET</td>
+                <td>-</td>
+                <td>/[route]/[page-index]/[page-size]</td>
+                <td>Read entity by pagination</td>
             </tr>
-             <tr>
-              <td>Delete</td>
-              <td>DELETE</td>
-              <td>-</td>
-              <td>/[route]/[id]</td>
-              <td>Delete entity by id</td>
+            <tr>
+                <td>Read</td>
+                <td>GET</td>
+                <td>-</td>
+                <td>/[route]/[id]</td>
+                <td>Read entity by id</td>
             </tr>
-          </tbody>
-        </table
+            <tr>
+                <td>Update</td>
+                <td>PUT</td>
+                <td>JSON</td>
+                <td>/[route]/[id]</td>
+                <td>Update entity</td>
+            </tr>
+            <tr>
+                <td>Delete</td>
+                <td>DELETE</td>
+                <td>-</td>
+                <td>/[route]/[id]</td>
+                <td>Delete entity by id</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 
     <div class="col-12 d-flex flex-column justify-content-center align-items-center mt-10 curl-request-cheat-sheet">

@@ -1,4 +1,4 @@
-﻿
+﻿@inject NavigationManager navigation
 
 <div class="container justify-content-between align-items-center">
 
@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <BitButton Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitButtonSize.Large"  ButtonStyle="BitButtonStyle.Standard">Sign in</BitButton>
+    <BitButton OnClick="@(()=> navigation.NavigateTo("signin"))" Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitButtonSize.Large"  ButtonStyle="BitButtonStyle.Standard">Sign in</BitButton>
 </div>
 
 
