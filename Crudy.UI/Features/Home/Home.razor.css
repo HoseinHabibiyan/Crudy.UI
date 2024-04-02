@@ -1,4 +1,8 @@
 ﻿
+.wrapper{
+    margin-bottom:100px;
+}
+
 #response {
     border: 1px solid #ccc;
     width: 100%;
@@ -30,7 +34,7 @@
 .curl-request-cheat-sheet img {
         box-shadow: 0 8px 6px -6px black;
         cursor: pointer;
-        width: 650px
+        width: 650px;
 }
 
 .curl-request-cheat-sheet span {
@@ -42,7 +46,17 @@
     display: none;
 }
 
+#show-help-img-dialog img{
+    /*padding:0 0 100px 0;*/
+}
+
 .container-rest-client {
     background-color: #2374ab;
     padding: 50px 0;
+}
+
+.loader{
+    position: fixed;
+    top:20%;
+    left:50%;
 }

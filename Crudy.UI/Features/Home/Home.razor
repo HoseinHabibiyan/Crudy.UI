@@ -2,7 +2,10 @@
 @using System.Text.Json
 @using System.Dynamic
 @using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @inject HttpClient client
+@inject IWebAssemblyHostEnvironment env
+
 
 <div class="wrapper col-12 d-flex flex-column justify-content-center align-items-center">
 
@@ -22,7 +25,7 @@
                     <div class="col-2">
                         <select class="form-control  text-center" @bind="httpMethod">
                             <option value="0">GET</option>
-                            <option value="1">POST</option>
+                            <option value="1" selected>POST</option>
                             <option value="2">PUT</option>
                             <option value="3">DELETE</option>
                         </select>
@@ -30,24 +33,21 @@
                     </div>
                     <div class="col-8 mr-1 ml-1">
                         <div class="input-group">
-                            <div class="input-group-prepend ">
-                                <span class="input-group-text">https://crudy.ir/</span>
-                            </div>
-                            <input type="text" @bind-value="urlAddress" class="form-control" placeholder="[route]/">
+                            <input type="text" @bind-value="urlAddress" class="form-control" placeholder="Url">
                         </div>
 
                     </div>
 
-                    <button @onclick="Get" class="btn btn-primary">Send</button>
+                    <button @onclick="SendRequest" class="btn btn-primary">Send</button>
                 </div>
                 <div class="mt-1">
-                    <BitPivot>
-                        <BitPivotItem HeaderText="Request Body" IsSelected="pivotItem" IsSelectedChanged="@(item => Console.Write(item.ToString()))">
+                    <BitPivot @bind-SelectedKey="pivotSelectedKey">
+                        <BitPivotItem HeaderText="Request Body" Key="Body">
                             <div style="margin-top:10px">
                                 <textarea placeholder="Body" id="request-body" @bind="body" class="form-control"></textarea>
                             </div>
                         </BitPivotItem>
-                        <BitPivotItem HeaderText="Result" IsSelected="!pivotItem" IsSelectedChanged="@(item => pivotItem = !pivotItem)">
+                        <BitPivotItem HeaderText="Result" Key="Result">
                             <pre id="response">@jsonData</pre>
                         </BitPivotItem>
                     </BitPivot>
@@ -64,7 +64,7 @@
                 <span class="p-2"> Data expires after 24 hours</span>
             </div>
             <div>
-                <BitButton Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitButtonSize.Large" ButtonStyle="BitButtonStyle.Standard">
+                <BitButton Size="BitButtonSize.Large" ButtonStyle="BitButtonStyle.Standard">
                     Sign up to keep your data permanent
                 </BitButton>
             </div>
@@ -76,88 +76,111 @@
     <div class="col-6 mt-3">
         <table class="table">
             <thead>
-            <tr>
-                <th scope="col">Action</th>
-                <th scope="col">HTTP Method</th>
-                <th scope="col">Payload</th>
-                <th scope="col">URL</th>
-                <th scope="col">Description</th>
-            </tr>
+                <tr>
+                    <th scope="col">Action</th>
+                    <th scope="col">HTTP Method</th>
+                    <th scope="col">Payload</th>
+                    <th scope="col">URL</th>
+                    <th scope="col">Description</th>
+                </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>Create</td>
-                <td>POST</td>
-                <td>JSON</td>
-                <td>/[route]</td>
-                <td>Create entity</td>
-            </tr>
-            <tr>
-                <td>Read</td>
-                <td>GET</td>
-                <td>-</td>
-                <td>/[route]/[page-index]/[page-size]</td>
-                <td>Read entity by pagination</td>
-            </tr>
-            <tr>
-                <td>Read</td>
-                <td>GET</td>
-                <td>-</td>
-                <td>/[route]/[id]</td>
-                <td>Read entity by id</td>
-            </tr>
-            <tr>
-                <td>Update</td>
-                <td>PUT</td>
-                <td>JSON</td>
-                <td>/[route]/[id]</td>
-                <td>Update entity</td>
-            </tr>
-            <tr>
-                <td>Delete</td>
-                <td>DELETE</td>
-                <td>-</td>
-                <td>/[route]/[id]</td>
-                <td>Delete entity by id</td>
-            </tr>
+                <tr>
+                    <td>Create</td>
+                    <td>POST</td>
+                    <td>JSON</td>
+                    <td>/[route]</td>
+                    <td>Create entity</td>
+                </tr>
+                <tr>
+                    <td>Read</td>
+                    <td>GET</td>
+                    <td>-</td>
+                    <td>/[route]/[page-index]/[page-size]</td>
+                    <td>Read entity by pagination</td>
+                </tr>
+                <tr>
+                    <td>Read</td>
+                    <td>GET</td>
+                    <td>-</td>
+                    <td>/[route]/[id]</td>
+                    <td>Read entity by id</td>
+                </tr>
+                <tr>
+                    <td>Update</td>
+                    <td>PUT</td>
+                    <td>JSON</td>
+                    <td>/[route]/[id]</td>
+                    <td>Update entity</td>
+                </tr>
+                <tr>
+                    <td>Delete</td>
+                    <td>DELETE</td>
+                    <td>-</td>
+                    <td>/[route]/[id]</td>
+                    <td>Delete entity by id</td>
+                </tr>
             </tbody>
         </table>
     </div>
 
     <div class="col-12 d-flex flex-column justify-content-center align-items-center mt-10 curl-request-cheat-sheet">
-        <span>Example</span>
-        <img src="curl-request.png"  class="img-fluid mt-2"  @onclick="@(()=> showHelp = true)" />
+        <img src="example-test-api.png" class="img-fluid mt-2" @onclick="@(()=> showHelp = true)" />
     </div>
 
 </div>
 
 
-
-
-
-
-<BitDialog @bind-IsOpen="showHelp" ShowCancelButton="false" ShowOkButton="false" Id="show-help-img-dialog">
-    <img src="curl-request.png"  class="img-fluid" width="800" />
+<BitDialog @bind-IsOpen="showHelp" ShowCancelButton="false" ShowOkButton="false" ShowCloseButton="false" Id="show-help-img-dialog">
+    <img src="example-test-api.png" class="img-fluid" width="750" />
 </BitDialog>
 
-
+<BitSnackBar @ref="snackBar" Position="BitSnackBarPosition.BottomCenter" />
 
 @code {
+    string baseUrl = default!;
     string urlAddress = default!;
-    int httpMethod = default!;
+    int httpMethod = 1;
     string jsonData = default!;
     string body = default!;
     bool showHelp = false;
-    bool pivotItem = true;
+    string pivotSelectedKey = PivotItem.Body.ToString();
+    private BitSnackBar snackBar = new();
+    bool BasicIsVisible = true;
 
-    public async Task Get()
+    protected override async Task OnInitializedAsync()
+    {
+        string testToken = "f4e9dd2aace448c987f44ade994cd87c";
+        body = $"{{ \n \"title\": \" Hello CRUDY \" \n }} ";
+        baseUrl = env.IsDevelopment() ? "https://localhost:6120/api/" : "https://crudy.ir/api/";
+
+        urlAddress = $"{baseUrl}{testToken}/test";
+
+        await base.OnInitializedAsync();
+    }
+
+    public async Task SendRequest()
     {
         if (urlAddress is null)
         {
+            await snackBar.Error("Error", "Please enter url address");
+            return;
+        }
+
+        if (!urlAddress.Contains(baseUrl))
+        {
+            await snackBar.Error("Error", "Url address is not valid");
             return;
         }
 
         var method = GetMethod(httpMethod);
+
+        if (method == HttpMethod.Post && string.IsNullOrWhiteSpace(body))
+        {
+            BitSnackBar basicSnackBarRef = new();
+            await basicSnackBarRef.Show("", "Body required", BitSnackBarType.Error);
+        }
+
         var request = new HttpRequestMessage(method, urlAddress);
 
         if (method == HttpMethod.Post || method == HttpMethod.Put)
@@ -166,15 +189,26 @@
 
         var response = await client.SendAsync(request);
 
-        if (!response.IsSuccessStatusCode)
+        using var content = response.Content;
+
+        jsonData = ((int)response.StatusCode).ToString() + " " + Regex.Replace(response.StatusCode.ToString(), "(?<=[a-z])([A-Z])", " $1", RegexOptions.Compiled) + "\n";
+
+        if (method == HttpMethod.Get || response.IsSuccessStatusCode)
         {
-            jsonData = ((int)response.StatusCode).ToString() + " " + Regex.Replace(response.StatusCode.ToString(), "(?<=[a-z])([A-Z])", " $1", RegexOptions.Compiled);
+            var data = await content.ReadFromJsonAsync<ExpandoObject>();
+
+            if (data is not null)
+                jsonData += JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+
             return;
         }
 
-        var content = await response.Content.ReadFromJsonAsync<ExpandoObject>();
+        if (method == HttpMethod.Post || method == HttpMethod.Put)
+        {
+            jsonData += await content.ReadAsStringAsync();
+        }
 
-        jsonData = JsonSerializer.Serialize(content, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+        pivotSelectedKey = PivotItem.Result.ToString();
     }
 
     private HttpMethod GetMethod(int index) => index switch
@@ -186,15 +220,9 @@
         _ => throw new NotImplementedException("Http method value is incorrect")
     };
 
-    // private void httpMethodChange()
-    // {
-    //     if (httpMethod is 1 or 2)
-    //         isShowRestClientBodyTab = true;
-    //     isShowRestClientResultTab = false;
-    // }
-
-    private void restClientTabs(EventArgs e)
+    enum PivotItem
     {
-        Console.WriteLine(e.ToString());
+        Body,
+        Result
     }
 }
