@@ -1,101 +1,24 @@
 ﻿@page "/admin"
+@layout AdminLayout
 @using System.Text.Json
 @using System.Dynamic
 @using System.Text.RegularExpressions
+@using Crudy.UI.Features.Components
+@using static Crudy.UI.Features.Components.RestClient
 @inject HttpClient client
 
 
-<PageTitle>Home</PageTitle>
-
-<style>
-    .response {
-        border: 1px solid #ccc;
-        padding: 10px;
-        width: 90%;
-        height:600px;
-        color:white
-    }
-
-    #request-body{
-        height:560px;
-    }
-</style>
+<PageTitle>Admin</PageTitle>
 
 
-
-
-<div class="wrapper d-flex justify-content-between align-items-start">
-    <div class="col-6">
-        <div class="d-flex justify-content-around align-items-center">
-            <div class="col-2">
-                <select class="form-control  text-center" @bind="httpMethod">
-                    <option value="0">GET</option>
-                    <option value="1">POST</option>
-                    <option value="2">PUT</option>
-                    <option value="3">DELETE</option>
-                </select>
-            </div>
-            <input type="text" @bind-value="urlAddress" class="form-control" />
-            <input class="btn btn-primary" @onclick="Get" value="Send" />
-        </div>
-        @if (httpMethod is 1 or 2)
-        {
-            <div class="mt-1">
-                <textarea id="request-body" @bind="body" class="form-control"></textarea>
-            </div>
-        }
-    </div>
-
-    <div class="col-6 d-flex justify-content-center">
-        @if (jsonData is not null)
-        {
-            <pre class="response">@jsonData</pre>
-        }
-    </div>
+<div class="wrapper d-flex justify-content-between align-items-center">
+    <RestClient />
 </div>
 
 
 
 
 @code {
-    string urlAddress = default!;
-    int httpMethod = default!;
-    string jsonData = default!;
-    string body = default!;
+    RestClientParam restClient = new();
 
-    public async Task Get()
-    {
-        if (urlAddress is null)
-        {
-            return;
-        }
-
-        var method = GetMethod(httpMethod);
-        var request = new HttpRequestMessage(method, urlAddress);
-
-        if (method == HttpMethod.Post || method == HttpMethod.Put)
-            request.Content = new StringContent(body);
-
-
-        var response = await client.SendAsync(request);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            jsonData = ((int)response.StatusCode).ToString() + " " + Regex.Replace(response.StatusCode.ToString(), "(?<=[a-z])([A-Z])", " $1", RegexOptions.Compiled);
-            return;
-        }
-
-        var content = await response.Content.ReadFromJsonAsync<ExpandoObject>();
-
-        jsonData = JsonSerializer.Serialize(content, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
-    }
-
-    private HttpMethod GetMethod(int index) => index switch
-    {
-        0 => HttpMethod.Get,
-        1 => HttpMethod.Post,
-        2 => HttpMethod.Put,
-        3 => HttpMethod.Delete,
-        _ => throw new NotImplementedException("Http method value is incorrect")
-    };
 }
