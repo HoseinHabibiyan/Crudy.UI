@@ -1,9 +1,11 @@
 ﻿@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @using System.Dynamic
+@using System.Net.Http.Headers
 @using System.Text.RegularExpressions
 @using System.Text.Json
-@inject IWebAssemblyHostEnvironment env
-@inject HttpClient client
+@inject IWebAssemblyHostEnvironment Env
+@inject HttpClient Client
+@inject IConfiguration Config
 
 
     <div class="card col-6 api-test mt-3">
@@ -51,20 +53,19 @@
     RestClientParam restClient = new();
     BitSnackBar snackBar = new();
     string pivotSelectedKey = PivotItem.Body.ToString();
-    string baseUrl = default!
-    ;
+    string? baseUrl = default!;
+
     protected override async Task OnInitializedAsync()
     {
-        string testToken = "f4e9dd2aace448c987f44ade994cd87c";
         restClient.Body = $"{{ \n \"title\": \" Hello CRUDY \" \n }} ";
-        baseUrl = env.IsDevelopment() ? "https://localhost:6120/api/" : "https://crudy.ir/api/";
+        baseUrl = Config["ApiUrl"];
 
-        restClient.UrlAddress = $"{baseUrl}{testToken}/test";
+        restClient.UrlAddress = $"{baseUrl}{Config["testToken"]}/test";
 
         await base.OnInitializedAsync();
     }
 
-    public async Task SendRequest()
+    async Task SendRequest()
     {
         if (restClient.UrlAddress is null)
         {
@@ -83,25 +84,24 @@
         if (method == HttpMethod.Post && string.IsNullOrWhiteSpace(restClient.Body))
         {
             BitSnackBar basicSnackBarRef = new();
-            await basicSnackBarRef.Show("", "Body required", BitSnackBarType.Error);
+            await basicSnackBarRef.Show("", "Body required",BitColor.Error);
         }
 
         var request = new HttpRequestMessage(method, restClient.UrlAddress);
 
         if (method == HttpMethod.Post || method == HttpMethod.Put)
-            request.Content = new StringContent(restClient.Body);
+            request.Content = new StringContent(restClient.Body,new MediaTypeHeaderValue("application/json"));
 
-
-        var response = await client.SendAsync(request);
+        var response = await Client.SendAsync(request);
 
         using var content = response.Content;
 
-        restClient.JsonData = ((int)response.StatusCode).ToString() + " " + Regex.Replace(response.StatusCode.ToString(), "(?<=[a-z])([A-Z])", " $1", RegexOptions.Compiled) + "\n";
+        restClient.JsonData = (int)response.StatusCode + " " + Regex.Replace(response.StatusCode.ToString(), "(?<=[a-z])([A-Z])", " $1", RegexOptions.Compiled) + "\n";
 
         if (method == HttpMethod.Get || response.IsSuccessStatusCode)
         {
             var data = await content.ReadFromJsonAsync<ExpandoObject>();
-
+            
             if (data is not null)
                 restClient.JsonData += JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
 
@@ -129,7 +129,7 @@
     {
         public int HttpMethod { get; set; } = 1;
         public string? JsonData { get; set; }
-        public string UrlAddress { get; set; } = default!;
+        public string? UrlAddress { get; set; } = default!;
         public string Body { get; set; } = default!;
     }
 
