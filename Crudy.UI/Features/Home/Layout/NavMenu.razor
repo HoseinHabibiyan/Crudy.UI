@@ -1,4 +1,7 @@
-﻿@inject NavigationManager Navigation
+﻿@using Crudy.UI.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject IAuthService Auth
 
 <div class="container justify-content-between align-items-center">
     <a href="/"><img src="logo.png" width="40" /></a>
@@ -10,7 +13,15 @@
     </div>
     </a>
     <div>
-        <BitButton OnClick="@(()=> Navigation.NavigateTo("signin"))" Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitSize.Large"  ButtonStyle="BitButtonStyle.Standard">Sign in</BitButton>
+        <AuthorizeView>
+            <NotAuthorized>
+                <BitButton OnClick="@(()=> Navigation.NavigateTo("signin"))" Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitSize.Large"  ButtonStyle="BitButtonStyle.Standard">Sign in</BitButton>
+            </NotAuthorized>
+            
+            <Authorized>
+                <BitButton OnClick="@(() => Auth.Logout())" Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitSize.Large"  ButtonStyle="BitButtonStyle.Standard">Logout</BitButton>
+            </Authorized>
+        </AuthorizeView>
     </div>
 
 </div>

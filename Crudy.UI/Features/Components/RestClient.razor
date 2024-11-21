@@ -13,7 +13,7 @@
 
             <div class="d-flex justify-content-around align-items-center">
                 <div class="col-2">
-                    <select class="form-control  text-center" @bind="restClient.HttpMethod">
+                    <select class="form-control  text-center" @bind="_restClient.HttpMethod">
                         <option value="0">GET</option>
                         <option value="1" selected>POST</option>
                         <option value="2">PUT</option>
@@ -23,7 +23,7 @@
                 </div>
                 <div class="col-8 mr-1 ml-1">
                     <div class="input-group">
-                        <input type="text" @bind-value="restClient.UrlAddress" class="form-control" placeholder="Url">
+                        <input type="text" @bind-value="_restClient.UrlAddress" class="form-control" placeholder="Url">
                     </div>
 
                 </div>
@@ -31,14 +31,14 @@
                 <button @onclick="SendRequest" class="btn btn-primary">Send</button>
             </div>
             <div class="mt-1">
-                <BitPivot @bind-SelectedKey="pivotSelectedKey">
+                <BitPivot @bind-SelectedKey="_pivotSelectedKey">
                     <BitPivotItem HeaderText="Request Body" Key="Body">
                         <div style="margin-top:10px">
-                            <textarea placeholder="Body" id="request-body" @bind="restClient.Body" class="form-control"></textarea>
+                            <textarea placeholder="Body" id="request-body" @bind="_restClient.Body" class="form-control"></textarea>
                         </div>
                     </BitPivotItem>
                     <BitPivotItem HeaderText="Result" Key="Result">
-                        <pre id="response">@restClient.JsonData</pre>
+                        <pre id="response">@_restClient.JsonData</pre>
                     </BitPivotItem>
                 </BitPivot>
             </div>
@@ -46,74 +46,74 @@
     </div>
 
 
-<BitSnackBar @ref="snackBar" Position="BitSnackBarPosition.BottomCenter" />
+<BitSnackBar @ref="_snackBar" Position="BitSnackBarPosition.BottomCenter" />
 
 @code {
 
-    RestClientParam restClient = new();
-    BitSnackBar snackBar = new();
-    string pivotSelectedKey = PivotItem.Body.ToString();
-    string? baseUrl = default!;
+    RestClientParam _restClient = new();
+    BitSnackBar _snackBar = new();
+    string _pivotSelectedKey = PivotItem.Body.ToString();
+    string? _baseUrl = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        restClient.Body = $"{{ \n \"title\": \" Hello CRUDY \" \n }} ";
-        baseUrl = Config["ApiUrl"];
+        _restClient.Body = "{{ \n \"title\": \" Hello CRUDY \" \n }} ";
+        _baseUrl = Config["ApiUrl"];
 
-        restClient.UrlAddress = $"{baseUrl}{Config["testToken"]}/test";
+        _restClient.UrlAddress = $"{_baseUrl}{Config["testToken"]}/test";
 
         await base.OnInitializedAsync();
     }
 
     async Task SendRequest()
     {
-        if (restClient.UrlAddress is null)
+        if (_restClient.UrlAddress is null)
         {
-            await snackBar.Error("Error", "Please enter url address");
+            await _snackBar.Error("Error", "Please enter url address");
             return;
         }
 
-        if (!restClient.UrlAddress.Contains(baseUrl))
+        if (!_restClient.UrlAddress.Contains(_baseUrl))
         {
-            await snackBar.Error("Error", "Url address is not valid");
+            await _snackBar.Error("Error", "Url address is not valid");
             return;
         }
 
-        var method = GetMethod(restClient.HttpMethod);
+        var method = GetMethod(_restClient.HttpMethod);
 
-        if (method == HttpMethod.Post && string.IsNullOrWhiteSpace(restClient.Body))
+        if (method == HttpMethod.Post && string.IsNullOrWhiteSpace(_restClient.Body))
         {
             BitSnackBar basicSnackBarRef = new();
             await basicSnackBarRef.Show("", "Body required",BitColor.Error);
         }
 
-        var request = new HttpRequestMessage(method, restClient.UrlAddress);
+        var request = new HttpRequestMessage(method, _restClient.UrlAddress);
 
         if (method == HttpMethod.Post || method == HttpMethod.Put)
-            request.Content = new StringContent(restClient.Body,new MediaTypeHeaderValue("application/json"));
+            request.Content = new StringContent(_restClient.Body,new MediaTypeHeaderValue("application/json"));
 
         var response = await Client.SendAsync(request);
 
         using var content = response.Content;
 
-        restClient.JsonData = (int)response.StatusCode + " " + Regex.Replace(response.StatusCode.ToString(), "(?<=[a-z])([A-Z])", " $1", RegexOptions.Compiled) + "\n";
+        _restClient.JsonData = (int)response.StatusCode + " " + Regex.Replace(response.StatusCode.ToString(), "(?<=[a-z])([A-Z])", " $1", RegexOptions.Compiled) + "\n";
 
         if (method == HttpMethod.Get || response.IsSuccessStatusCode)
         {
             var data = await content.ReadFromJsonAsync<ExpandoObject>();
             
             if (data is not null)
-                restClient.JsonData += JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                _restClient.JsonData += JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
 
             return;
         }
 
         if (method == HttpMethod.Post || method == HttpMethod.Put)
         {
-            restClient.JsonData += await content.ReadAsStringAsync();
+            _restClient.JsonData += await content.ReadAsStringAsync();
         }
 
-        pivotSelectedKey = PivotItem.Result.ToString();
+        _pivotSelectedKey = PivotItem.Result.ToString();
     }
 
     private HttpMethod GetMethod(int index) => index switch

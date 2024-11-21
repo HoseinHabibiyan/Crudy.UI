@@ -1,6 +1,6 @@
 ﻿@using Crudy.UI.Identity
 @page "/signin"
-@inject IAccountManagement Acc
+@inject IAuthService Auth
 @inject NavigationManager NavigationManager
 
 <style>
@@ -30,7 +30,11 @@
                     <label class="form-label">Password</label>
                     <input type="password" class="form-control" placeholder="password" @bind-value="_password">
                 </div>
-                <button class="btn-lg" Style="background-color:#2374ab; color:white; border-color:#2374ab" @onclick="Register">Sign in</button>
+                <button class="btn-lg" Style="background-color:#2374ab; color:white; border-color:#2374ab" @onclick="Login">Sign in</button>
+                
+                <div class="text-center mt-2">
+                    Don’t have an account? <NavLink href="/signup">Sign up</NavLink>
+                </div>
             </div>
         </div>
     </div>
@@ -40,7 +44,7 @@
     private string _password = string.Empty;
     private string[] _errorList = [];
  
-    async Task Register()
+    async Task Login()
     {
         if (string.IsNullOrWhiteSpace(_email))
         {
@@ -56,11 +60,11 @@
             return;
         }
  
-        var result = await Acc.LoginAsync(_email, _password);
+        var result = await Auth.Login(_email, _password);
 
         if (result.Succeeded)
-        {
-            NavigationManager.NavigateTo("/dashboard");
-        }
+            NavigationManager.NavigateTo("/dashboard",true);
+
+        _errorList = result.ErrorList;
     }
 }

@@ -11,20 +11,16 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 #region Identity
 
-builder.Services.AddScoped<CookieHandler>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CookieAuthenticationStateProvider>();
-builder.Services.AddScoped(sp => (IAccountManagement)sp.GetRequiredService<AuthenticationStateProvider>());
+builder.Services.AddScoped(sp => (IAuthService)sp.GetRequiredService<AuthenticationStateProvider>());
 builder.Services.AddHttpClient(
         "Auth",
         opt => opt.BaseAddress = new Uri(builder.Configuration["ApiUrl"]!))
     .AddHttpMessageHandler<CookieHandler>();
-
 #endregion
 
-
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
+builder.Services.AddHttpClient("default", opt => opt.BaseAddress = new Uri(builder.Configuration["ApiUrl"]!));
 builder.Services.AddBlazoredLocalStorage();
 
 await builder.Build().RunAsync();

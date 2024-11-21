@@ -1,6 +1,6 @@
 ﻿@using Crudy.UI.Identity
 @page "/signup"
-@inject IAccountManagement Acct
+@inject IAuthService Auth
 @inject NavigationManager NavigationManager
 
 <style>
@@ -78,11 +78,11 @@
             return;
         }
  
-        var result = await Acct.RegisterAsync(_email, _password);
+        var result = await Auth.Register(_email, _password);
  
         if (result.Succeeded)
         {
-            await Acct.LoginAsync(_email, _password);
+            await Auth.Login(_email, _password);
             NavigationManager.NavigateTo("/dashboard");
             
             _email = _password = _confirmPassword = string.Empty;

@@ -4,11 +4,13 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Blazored.LocalStorage;
+using Crudy.UI.Features.Home.Models;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Crudy.UI.Identity;
 
- public class CookieAuthenticationStateProvider : AuthenticationStateProvider, IAccountManagement
+ public class CookieAuthenticationStateProvider(ILocalStorageService localStorageService , IHttpClientFactory clientFactory , NavigationManager navigationManager) : AuthenticationStateProvider, IAuthService
     {
         private readonly JsonSerializerOptions jsonSerializerOptions =
             new()
@@ -16,100 +18,81 @@ namespace Crudy.UI.Identity;
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
 
-        private readonly ILocalStorageService _localStorage;
-        private readonly HttpClient _httpClient;
+        private readonly HttpClient _httpClient = clientFactory.CreateClient("default");
         
         private bool _authenticated = false;
         
-        private readonly ClaimsPrincipal Unauthenticated =
-            new(new ClaimsIdentity());
+        private readonly ClaimsPrincipal Unauthenticated = new(new ClaimsIdentity());
         
-        public CookieAuthenticationStateProvider(IHttpClientFactory httpClientFactory, ILocalStorageService localStorage)
-        {
-            _localStorage = localStorage;
-            _httpClient = httpClientFactory.CreateClient("Auth");
-        }
 
-        public async Task<FormResult> RegisterAsync(string email, string password)
+        public async Task<FormResult> Register(string email, string password)
         {
-            string[] defaultDetail = ["An unknown error prevented registration from succeeding."];
+            var response = await _httpClient.PostAsJsonAsync(
+                "/api/user/register", new
+                {
+                    email,
+                    password
+                });
  
-            try
+            if (response.IsSuccessStatusCode)
             {
-                var result = await _httpClient.PostAsJsonAsync(
-                    "/api/user/register", new
-                    {
-                        email,
-                        password
-                    });
- 
-                if (result.IsSuccessStatusCode)
-                {
-                    return new FormResult { Succeeded = true };
-                }
- 
-                var details = await result.Content.ReadAsStringAsync();
-                var problemDetails = JsonDocument.Parse(details);
-                var errors = new List<string>();
-                var errorList = problemDetails.RootElement.GetProperty("errors");
- 
-                foreach (var errorEntry in errorList.EnumerateObject())
-                {
-                    if (errorEntry.Value.ValueKind == JsonValueKind.String)
-                    {
-                        errors.Add(errorEntry.Value.GetString()!);
-                    }
-                    else if (errorEntry.Value.ValueKind == JsonValueKind.Array)
-                    {
-                        errors.AddRange(
-                            errorEntry.Value.EnumerateArray().Select(
-                                e => e.GetString() ?? string.Empty)
-                            .Where(e => !string.IsNullOrEmpty(e)));
-                    }
-                }
- 
-                return new FormResult
-                {
-                    Succeeded = false,
-                    ErrorList = problemDetails == null ? defaultDetail : [.. errors]
-                };
+                return new FormResult { Succeeded = true };
             }
-            catch { }
+            
+            var result = await response.Content.ReadFromJsonAsync<IdentityResult>();
  
             return new FormResult
             {
                 Succeeded = false,
-                ErrorList = defaultDetail
+                ErrorList = [result.Detail]
             };
         }
-        
-        public async Task<FormResult> LoginAsync(string email, string password)
+
+        public async Task<UserInfo?> GetUserInfo()
         {
-            try
-            {
-                var result = await _httpClient.PostAsJsonAsync(
-                    "/api/user/login", new
-                    {
-                        email,
-                        password
-                    });
- 
-                if (result.IsSuccessStatusCode)
+            var token = await localStorageService.GetItemAsync<string?>("token");
+
+            if (token is null)
+                return default;
+                
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+            var userResponse = await _httpClient.GetAsync("/api/user/user-info");
+
+            userResponse.EnsureSuccessStatusCode();
+
+            return await userResponse.Content.ReadFromJsonAsync<UserInfo>();
+        }
+
+        public async Task<bool> IsAuthenticated()
+        {
+            var token = await localStorageService.GetItemAsync<string?>("token");
+            return token is not null;
+        }
+
+        public async Task<FormResult> Login(string email, string password)
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "/api/user/login", new
                 {
-                    string token = await result.Content.ReadAsStringAsync();
-                    await _localStorage.SetItemAsync("token",token );
+                    email,
+                    password
+                });
+                
+            if (response.IsSuccessStatusCode)
+            {
+                await GetAuthenticationStateAsync();
+                await localStorageService.SetItemAsync("token",await response.Content.ReadAsStringAsync() );
                     
-                    NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
- 
-                    return new FormResult { Succeeded = true };
-                }
+                return new FormResult { Succeeded = true };
             }
-            catch { }
- 
+                
+            var result = await response.Content.ReadFromJsonAsync<IdentityResult>();
+
             return new FormResult
             {
                 Succeeded = false,
-                ErrorList = ["Invalid email and/or password."]
+                ErrorList = [result.Detail]
             };
         }
         
@@ -119,51 +102,45 @@ namespace Crudy.UI.Identity;
  
             var user = Unauthenticated;
  
-            try
+            var token = await localStorageService.GetItemAsync<string?>("token");
+
+            if (token is not null)
             {
-                var token = await _localStorage.GetItemAsync<string?>("token");
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+                var userResponse = await _httpClient.GetAsync("/api/user/user-info");
 
-                if (token is not null)
+                userResponse.EnsureSuccessStatusCode();
+
+                var userJson = await userResponse.Content.ReadAsStringAsync();
+                var userInfo = JsonSerializer.Deserialize<UserInfo>(userJson, jsonSerializerOptions);
+
+                if (userInfo != null)
                 {
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new AuthenticationHeaderValue("Bearer", token);
-                    var userResponse = await _httpClient.GetAsync("/api/user/user-info");
-
-                    userResponse.EnsureSuccessStatusCode();
-
-                    var userJson = await userResponse.Content.ReadAsStringAsync();
-                    var userInfo = JsonSerializer.Deserialize<UserInfo>(userJson, jsonSerializerOptions);
-
-                    if (userInfo != null)
+                    var claims = new List<Claim>
                     {
-                        var claims = new List<Claim>
-                        {
-                            new(ClaimTypes.Name, userInfo.Email),
-                            new(ClaimTypes.Email, userInfo.Email)
-                        };
+                        new(ClaimTypes.Name, userInfo.Email),
+                        new(ClaimTypes.Email, userInfo.Email)
+                    };
 
-                        var id = new ClaimsIdentity(claims, nameof(CookieAuthenticationStateProvider));
-                        user = new ClaimsPrincipal(id);
-                        _authenticated = true;
-                    }
+                    var id = new ClaimsIdentity(claims, nameof(CookieAuthenticationStateProvider));
+                    user = new ClaimsPrincipal(id);
+                    _authenticated = true;
                 }
             }
-            catch { }
- 
+
             return new AuthenticationState(user);
-        }
- 
-        public async Task LogoutAsync()
-        {
-            const string Empty = "{}";
-            var emptyContent = new StringContent(Empty, Encoding.UTF8, "application/json");
-            await _httpClient.PostAsync("Logout", emptyContent);
-            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
  
         public async Task<bool> CheckAuthenticatedAsync()
         {
             await GetAuthenticationStateAsync();
             return _authenticated;
+        }
+
+        public async Task Logout()
+        {
+            await localStorageService.RemoveItemAsync("token");
+            navigationManager.Refresh();
         }
     }

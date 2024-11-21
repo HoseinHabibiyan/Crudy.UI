@@ -1,8 +1,18 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavigationManager
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <AuthorizeRouteView  RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <Authorizing></Authorizing>
+                <NotAuthorized>
+                    @if (!context.User.Identity.IsAuthenticated)
+                    {
+
+                        NavigationManager.NavigateTo("/");
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>

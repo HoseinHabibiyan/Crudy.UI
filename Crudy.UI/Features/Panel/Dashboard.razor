@@ -1,16 +1,61 @@
 ﻿@page "/dashboard"
 @layout PanelLayout
+@using System.Net.Http.Headers
+@using Blazored.LocalStorage
 @using Crudy.UI.Features.Panel.Layout
 @using Microsoft.AspNetCore.Authorization
+@inject IHttpClientFactory ClientFactory
+@inject ILocalStorageService LocalStorage
+@inject IJSRuntime JsInterop
+@attribute [Authorize]
 
+<PageTitle>Panel</PageTitle>
 
-<PageTitle>Admin</PageTitle>
+<style>
+    #token{
+        text-align: center;
+        margin-left: 5px;
+    }
+    
+    #copy{
+        cursor: pointer;
+    }
+</style>
 
+<div class="container justify-content-center align-items-center">
+    <div class="card col-12">
+        <h1 class="text-center mt-3">Your token</h1>
+        <div class="card-body w-100 d-flex justify-content-center align-items-center">
+            <a id="copy" @onclick="CopyToClipboard"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+                </svg></a>
+            <label id="token">@_apiToken</label>
+        </div>
+    </div>
+</div>
 
-<span>test </span>
-
-
+<BitSnackBar @ref="_snackBar" Position="BitSnackBarPosition.BottomCenter" />
 
 @code {
+    BitSnackBar _snackBar = new();
+    private string? _apiToken;
+    protected override async Task OnInitializedAsync()
+    { 
+        HttpClient client = ClientFactory.CreateClient("default");
+
+       var jwtToken = await LocalStorage.GetItemAsync<string>("token");
+       
+       client.DefaultRequestHeaders.Authorization =
+           new AuthenticationHeaderValue("Bearer", jwtToken);
+       _apiToken = await client.GetFromJsonAsync<string>("/api/token");
+
+        await base.OnInitializedAsync();
+    }
+
+    async Task CopyToClipboard()
+    {
+        await JsInterop.InvokeVoidAsync("navigator.clipboard.writeText", _apiToken);
+        await _snackBar.Success("Copy", "The token was copied to the clipboard. ");
+    }
 
 }
