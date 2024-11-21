@@ -1,6 +1,7 @@
-﻿@using Crudy.UI.Features.Home.Models;
+﻿@using Crudy.UI.Identity
 @page "/signin"
-@inject HttpClient client
+@inject IAccountManagement Acc
+@inject NavigationManager NavigationManager
 
 <style>
    .card h1{
@@ -10,22 +11,57 @@
    }
 </style>
 
-<div class="container  justify-content-center align-items-center">
-    <div class="card col-4 api-test mt-3">
-        <h1 class="text-center mt-3">Sign in</h1>
-        <div class="card-body w-100 d-flex flex-column">
-            <div class="mb-3">
-                <label class="form-label">Email address</label>
-                <input type="email" class="form-control" placeholder="Email address">
+    <div class="container justify-content-center align-items-center">
+        <div class="card col-6">
+            @if (_errorList.Any())
+            {
+                @foreach (var error in _errorList)
+                {
+                    <div class="alert alert-danger m-1  text-center">@error</div>
+                }
+            }
+            <h1 class="text-center mt-3">Sign in</h1>
+            <div class="card-body w-100 d-flex flex-column">
+                <div class="mb-3">
+                    <label class="form-label">Email address</label>
+                    <input type="email" class="form-control" placeholder="Email address" @bind-value="_email">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" placeholder="password" @bind-value="_password">
+                </div>
+                <button class="btn-lg" Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitSize.Large" @onclick="Register">Sign in</button>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" class="form-control" placeholder="assword">
-            </div>
-          <BitButton Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitSize.Large" ButtonStyle="BitButtonStyle.Standard">Sign in</BitButton>
         </div>
     </div>
-</div>
 
 @code {
-} 
+    private string _email = string.Empty;
+    private string _password = string.Empty;
+    private string[] _errorList = [];
+ 
+    async Task Register()
+    {
+        if (string.IsNullOrWhiteSpace(_email))
+        {
+            _errorList = ["Email is required."];
+ 
+            return;
+        }
+ 
+        if (string.IsNullOrWhiteSpace(_password))
+        {
+            _errorList = ["Password is required."];
+ 
+            return;
+        }
+ 
+        var result = await Acc.LoginAsync(_email, _password);
+
+        if (result.Succeeded)
+        {
+            NavigationManager.NavigateTo("/dashboard");
+        }
+        
+    }
+}
