@@ -123,29 +123,29 @@ namespace Crudy.UI.Identity;
             {
                 var token = await _localStorage.GetItemAsync<string?>("token");
 
-                if (token is null)
-                    return default;
-                
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", token);
-                var userResponse = await _httpClient.GetAsync("/api/user/user-info");
- 
-                userResponse.EnsureSuccessStatusCode();
- 
-                var userJson = await userResponse.Content.ReadAsStringAsync();
-                var userInfo = JsonSerializer.Deserialize<UserInfo>(userJson, jsonSerializerOptions);
- 
-                if (userInfo != null)
+                if (token is not null)
                 {
-                    var claims = new List<Claim>
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", token);
+                    var userResponse = await _httpClient.GetAsync("/api/user/user-info");
+
+                    userResponse.EnsureSuccessStatusCode();
+
+                    var userJson = await userResponse.Content.ReadAsStringAsync();
+                    var userInfo = JsonSerializer.Deserialize<UserInfo>(userJson, jsonSerializerOptions);
+
+                    if (userInfo != null)
                     {
-                        new(ClaimTypes.Name, userInfo.Email),
-                        new(ClaimTypes.Email, userInfo.Email)
-                    };
- 
-                    var id = new ClaimsIdentity(claims, nameof(CookieAuthenticationStateProvider));
-                    user = new ClaimsPrincipal(id);
-                    _authenticated = true;
+                        var claims = new List<Claim>
+                        {
+                            new(ClaimTypes.Name, userInfo.Email),
+                            new(ClaimTypes.Email, userInfo.Email)
+                        };
+
+                        var id = new ClaimsIdentity(claims, nameof(CookieAuthenticationStateProvider));
+                        user = new ClaimsPrincipal(id);
+                        _authenticated = true;
+                    }
                 }
             }
             catch { }
