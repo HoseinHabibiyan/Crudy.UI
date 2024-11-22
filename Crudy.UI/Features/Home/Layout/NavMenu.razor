@@ -19,7 +19,7 @@
             </NotAuthorized>
             
             <Authorized>
-                <BitButton OnClick="@(() => Auth.Logout())" Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitSize.Large"  ButtonStyle="BitButtonStyle.Standard">Logout</BitButton>
+                <BitButton OnClick="@(() => Navigation.NavigateTo("/dashboard"))" Style="background-color:#2374ab; color:white; border-color:#2374ab" Size="BitSize.Large"  ButtonStyle="BitButtonStyle.Standard">Dashboard</BitButton>
             </Authorized>
         </AuthorizeView>
     </div>
