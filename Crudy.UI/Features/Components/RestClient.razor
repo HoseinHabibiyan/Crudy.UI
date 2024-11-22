@@ -57,7 +57,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _restClient.Body = "{{ \n \"title\": \" Hello CRUDY \" \n }} ";
+        _restClient.Body = $"{{ \n \"title\": \" Hello CRUDY \" \n }} ";
         _baseUrl = Config["ApiUrl"];
 
         _restClient.UrlAddress = $"{_baseUrl}{Config["testToken"]}/test";
