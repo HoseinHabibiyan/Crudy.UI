@@ -75,9 +75,16 @@
         {
             _client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", jwtToken);
-            var res  = await _client.GetAsync("/api/token");
-            if (res.IsSuccessStatusCode)
-                apiToken = await res.Content.ReadFromJsonAsync<string>();
+            try
+            {
+                var res = await _client.GetAsync("/api/token");
+                if (res.IsSuccessStatusCode)
+                    apiToken = await res.Content.ReadFromJsonAsync<string>();
+            }
+            catch (Exception e)
+            {
+                // ignored
+            }
         }
 
         _restClient.UrlAddress = $"{_baseUrl}{apiToken}/test";

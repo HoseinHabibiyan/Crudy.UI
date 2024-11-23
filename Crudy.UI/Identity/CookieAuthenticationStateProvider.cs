@@ -50,18 +50,27 @@ namespace Crudy.UI.Identity;
 
         public async Task<UserInfo?> GetUserInfo()
         {
-            var token = await localStorageService.GetItemAsync<string?>("token");
+            try
+            {
+                var token = await localStorageService.GetItemAsync<string?>("token");
 
-            if (token is null)
-                return default;
-                
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-            var userResponse = await _httpClient.GetAsync("/api/user/user-info");
+                if (token is null)
+                    return default;
 
-            userResponse.EnsureSuccessStatusCode();
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+                var userResponse = await _httpClient.GetAsync("/api/user/user-info");
 
-            return await userResponse.Content.ReadFromJsonAsync<UserInfo>();
+                userResponse.EnsureSuccessStatusCode();
+
+                return await userResponse.Content.ReadFromJsonAsync<UserInfo>();
+            }
+            catch (Exception e)
+            {
+                // ignored
+            }
+            
+            return default;
         }
 
         public async Task<bool> IsAuthenticated()
@@ -106,14 +115,7 @@ namespace Crudy.UI.Identity;
 
             if (token is not null)
             {
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", token);
-                var userResponse = await _httpClient.GetAsync("/api/user/user-info");
-
-                userResponse.EnsureSuccessStatusCode();
-
-                var userJson = await userResponse.Content.ReadAsStringAsync();
-                var userInfo = JsonSerializer.Deserialize<UserInfo>(userJson, jsonSerializerOptions);
+              var userInfo = await GetUserInfo();
 
                 if (userInfo != null)
                 {
