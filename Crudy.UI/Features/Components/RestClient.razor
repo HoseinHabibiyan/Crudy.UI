@@ -3,9 +3,14 @@
 @using System.Net.Http.Headers
 @using System.Text.RegularExpressions
 @using System.Text.Json
+@using Blazored.LocalStorage
+@using JsonSerializer = System.Text.Json.JsonSerializer
+
+@using Newtonsoft.Json
 @inject IWebAssemblyHostEnvironment Env
-@inject HttpClient Client
+@inject IHttpClientFactory ClientFactory
 @inject IConfiguration Config
+@inject ILocalStorageService LocalStorage
 
 
     <div class="card col-6 api-test mt-3">
@@ -50,6 +55,7 @@
 
 @code {
 
+    HttpClient _client;
     RestClientParam _restClient = new();
     BitSnackBar _snackBar = new();
     string _pivotSelectedKey = PivotItem.Body.ToString();
@@ -57,10 +63,24 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _client = ClientFactory.CreateClient("default");
         _restClient.Body = $"{{ \n \"title\": \" Hello CRUDY \" \n }} ";
         _baseUrl = Config["ApiUrl"];
 
-        _restClient.UrlAddress = $"{_baseUrl}{Config["testToken"]}/test";
+        string? apiToken = Config["testToken"];
+
+        var jwtToken = await LocalStorage.GetItemAsync<string>("token");
+
+        if (jwtToken is not null)
+        {
+            _client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", jwtToken);
+            var res  = await _client.GetAsync("/api/token");
+            if (res.IsSuccessStatusCode)
+                apiToken = await res.Content.ReadFromJsonAsync<string>();
+        }
+
+        _restClient.UrlAddress = $"{_baseUrl}{apiToken}/test";
 
         await base.OnInitializedAsync();
     }
@@ -92,15 +112,16 @@
         if (method == HttpMethod.Post || method == HttpMethod.Put)
             request.Content = new StringContent(_restClient.Body,new MediaTypeHeaderValue("application/json"));
 
-        var response = await Client.SendAsync(request);
+        var response = await _client.SendAsync(request);
 
         using var content = response.Content;
 
         _restClient.JsonData = (int)response.StatusCode + " " + Regex.Replace(response.StatusCode.ToString(), "(?<=[a-z])([A-Z])", " $1", RegexOptions.Compiled) + "\n";
 
-        if (method == HttpMethod.Get || response.IsSuccessStatusCode)
+        if (method == HttpMethod.Get && response.IsSuccessStatusCode)
         {
-            var data = await content.ReadFromJsonAsync<ExpandoObject>();
+            string strContent = await content.ReadAsStringAsync();
+            var data = JsonConvert.DeserializeObject<ExpandoObject>(strContent);
             
             if (data is not null)
                 _restClient.JsonData += JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
